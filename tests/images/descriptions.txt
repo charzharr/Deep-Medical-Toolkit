@@ -1,0 +1,27 @@
+bcv.nii.gz (512x512x147)
+	IJK2RAS: [[-1  0  0]
+	          [ 0 -1  0]
+	          [ 0  0  1]]
+	Spacing: (0.668, 0.668, 3)
+	Origin: (0, 0, 0)
+
+kits.nii.gz (97x512x512) <-- Already transposed to zyx so transpose when you GetArrayFromImage.
+	IJK2RAS: [[ 0  0 -1]
+	          [ 0 -1  0]
+	          [-1  0  0]]
+	Spacing: (5, 0.664, 0.664)
+	Origin: (0, 0, 0)
+
+liver_0.nii.gz (512x512x75)
+	IJK2RAS: [[ 1  0  0]
+	          [ 0  1  0]
+	          [ 0  0  1]]
+	Spacing: (0.703, 0.703, 5)
+	Origin: (-186.4, -179.3, -368)
+
+lung_038.nii.gz (512x512x125)
+	IJK2RAS: [[-1  0  0]
+	          [ 0  1  0]
+	          [ 0  0  1]]
+	Spacing: (0.781, 0.781, 2.5)
+	Origin: (205.5, -212.2, -303.4)
