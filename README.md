@@ -1,5 +1,8 @@
 
-# Deep Medical Tools (dmt)
+# Deep Medical Toolkit (dmt)
+
+This repo consists of a personal code toolkit for the purpose of facilitating medical imaging research. The main components of this library consists of a neural network model zoo, image transformations (for preprocessing &amp; augmentation), common metrics/losses, fast multiprocessed data loading, and data structures for image samples.
+
 
 ## Implementation Details
 
@@ -40,6 +43,3 @@ if a path is given.
 
 TODO:
 - [ ] Remove printing private attributes in __repr__ for images & others.
-
-# Deep-Medical-Toolkit-
-A personal code toolkit for the purpose of facilitating medical imaging research. The main components of this library consists of a neural network model zoo, image transformations (for preprocessing &amp; augmentation), common metrics/losses, fast multiprocessed data loading, and data structures for image samples.
