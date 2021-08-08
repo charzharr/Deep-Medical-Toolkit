@@ -56,4 +56,5 @@ Data
 - [ ] Add 
 
 Transforms
+- [ ] Add image shape tracking to attributes for transforms (sample transform history).
 - [ ] Add both 2D & 3D resized crop where you can set the scale.
