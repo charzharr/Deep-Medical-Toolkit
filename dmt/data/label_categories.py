@@ -135,7 +135,7 @@ class CategoricalLabel(Label):
         attrs = {k: v for k, v in self.items() if k not in self._default_attrs}
         attrs_str = pprint.pformat(attrs, indent=2, compact=True)
         string = (
-            f'{self.__class__.__name__} ({cat_type}, gid={self.global_id})\n'
+            f'{self.__class__.__name__} ({cat_type}, gid={self.gid})\n'
             f'  Label: cls-ids={ids}, cls-names={lab_names}\n'
             f'  {self.num_classes} classes: {self.class_names}\n'
             f'Other Attributes: \n {attrs_str} \n')

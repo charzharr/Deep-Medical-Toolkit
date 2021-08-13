@@ -1,8 +1,6 @@
 
-import numpy as np
-import SimpleITK as sitk
-
-import torch
+import logging
+import weakref
 
 from ..image_base import Image
 from ..label_base import Label
@@ -14,8 +12,8 @@ class Sample(dict):
     This object contains a counter to be used for global sample identification.
     """
     _id_counter = 0
-    # _gid_to_instance = {}
-    _reserved_attributes = ('num_images', 'num_labels')
+    _gid_to_instance = weakref.WeakValueDictionary()
+    _reserved_attributes = ('gid', 'num_images', 'num_labels')
     
     def __init__(self, dictionary=None, **kwargs):
         """
@@ -24,8 +22,8 @@ class Sample(dict):
             excluded_images: 
         """
         # Global Sample ID tracking
-        self.global_id = Sample._id_counter
-        # Sample._gid_to_instance[self.global_id] = self
+        self.gid = Sample._id_counter  # global ID for Sample objects
+        Sample._gid_to_instance[self.gid] = self
         Sample._id_counter += 1
         
         self.applied_transforms = []
@@ -34,6 +32,7 @@ class Sample(dict):
             kwargs.update(dictionary)
         super().__init__(**kwargs)
         self.update_attributes()
+        logging.debug(f'📦 Sample object created: {repr(self)}')
     
     @property
     def num_images(self):
@@ -120,14 +119,17 @@ class Sample(dict):
     ### ------ #      Transforms History & Reproducibility      # ----- ###
     
     def record_transform(self, transform_reproducing_arguments):
-        self.applied_transforms.append(transform_reproducing_arguments)
+        item = transform_reproducing_arguments
+        self.applied_transforms.append(item)
+        logging.debug(f'Sample {self.gid}: Updating transforms {item}. \n'
+                      f'  Transforms history: {self.applied_transforms}.')
     
     
     ### ------ #      Other Functionality      # ----- ###
     
     def __repr__(self):
         string = (
-            f'{self.__class__.__name__} (gid={self.global_id}) \n'
+            f'{self.__class__.__name__} (gid={self.gid}) \n'
             f'{self.num_images} Image(s) \n'
         )
         for name, img in self.get_images_dict().items():
@@ -159,7 +161,7 @@ class Sample(dict):
                 value = copy.deepcopy(value)
             result_dict[key] = value
         new = Sample(result_dict)
-        # new.applied_transforms = self.applied_transforms[:]
+        new.applied_transforms = self.applied_transforms[:]
         return new
     
     ### Functions below offers compatible/correct dict functionality
@@ -171,13 +173,14 @@ class Sample(dict):
         super().__setattr__(name, value)
     
     def __getitem__(self, item):
-        # print(f'Getting item: {item}')
-        return super().__getitem__(item)
+        item = super().__getitem__(item)
+        logging.debug(f'Sample {self.gid}: Getting item: {item}')
+        return item
     
     def __setitem__(self, key, value):
-        # print(f'Setting {key} to {value}')
         super().__setitem__(key, value)
         self.update_attributes()
+        logging.debug(f'Sample {self.gid}: Setting {key} to {value}')
         
     def update(self, *args, **kwargs):
         if args:

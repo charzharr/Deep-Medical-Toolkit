@@ -22,6 +22,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 import os, sys
+import weakref
 import pathlib
 import pprint
 from numpy.lib.type_check import _asfarray_dispatcher
@@ -65,7 +66,7 @@ class Image(dict):
     
     # Class Variables
     _id_counter = 0  # global runtime ID generator for all Image subclasses
-    # _gid_to_instance = {}
+    _gid_to_instance = weakref.WeakValueDictionary()
     _default_attrs = ['path', 'given_type', 'container_type', 'shape',
                          'spacing', 'origin', 'direction']
     
@@ -78,8 +79,8 @@ class Image(dict):
             ):
         
         # Global Image ID tracking
-        self.global_id = Image._id_counter
-        # Image._gid_to_instance[self.global_id] = self  # save memory
+        self.gid = Image._id_counter
+        Image._gid_to_instance[self.gid] = self
         Image._id_counter += 1
         
         # Load sitk image backend and default attributes
@@ -297,7 +298,7 @@ class Image(dict):
     @property
     def name(self):
         path = str(pathlib.Path(self.path).name) if self.path else ''
-        name = f"{self.__class__.__name__}_gid{self.global_id}"
+        name = f"{self.__class__.__name__}_gid{self.gid}"
         if path:
             name += f'_{path}'
         return name
@@ -423,7 +424,7 @@ class Image(dict):
         attrs_str = pprint.pformat(attrs, indent=1, compact=True)
         
         string = (
-            f"{self.__class__.__name__} (gid={self.global_id}) {path}\n"
+            f"{self.__class__.__name__} (gid={self.gid}) {path}\n"
             f"  Given Format (type={self.given_type}) \n"
             f"  Type: {sitk_type}, Shape {self._shape}, Spacing {self._spacing} \n"
             f"  Origin {self._origin}, Direction {self._direction} \n"

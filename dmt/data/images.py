@@ -11,6 +11,7 @@ Organization (class definitions in order):
 from __future__ import annotations  # allows Class annotations before definition
 import sys, os
 import pathlib
+import logging
 
 import torch
 import PIL
@@ -27,10 +28,6 @@ from ..constants import (
     IMTYPE_2_TORCH
 )
 
-
-class Subject:  # Idea catcher for future work
-    def plot(self):  # different for 3D and 2D subjects
-        pass  # viz_utils.plot_images(masks & images)
 
 ### ---- ### ---- \\    2D Images     // ---- ### ---- ###
 
@@ -53,6 +50,7 @@ class VectorImage2D(Image):
             permanent_load=permanent_load, 
             **kwargs
         )
+        logging.debug(f'🖼️ Image object created: {repr(self)}')
     
     def get_array(self, sitk_im, out_type, channel_first=False, **kwargs):
         msg = f'Given type "{out_type}" is not a valid numpy dtype.'
@@ -124,6 +122,7 @@ class ScalarImage2D(Image):
             permanent_load=permanent_load, 
             **kwargs
         )
+        logging.debug(f'🖼️ Image object created: {repr(self)}')
     
     def get_array(self, sitk_im, out_type, **kwargs):
         msg = f'Given type "{out_type}" is not a valid numpy dtype.'
@@ -217,6 +216,7 @@ class ScalarImage3D(Image):
             permanent_load=permanent_load, 
             **kwargs
         )
+        logging.debug(f'🖼️ Image object created: {repr(self)}')
     
     def get_array(self, sitk_im, out_type,
                   isotropic=False, interpolation='bspline', **kwargs):

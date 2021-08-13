@@ -1,18 +1,19 @@
 
+import weakref
 
 class Label(dict):
     """ Base class for all labels (e.g. masks, class ids). """
     
     # Class Variables
     _id_counter = 0  # global runtime ID generator for all Image subclasses
-    # _gid_to_instance = {}
+    _gid_to_instance = weakref.WeakValueDictionary()
     _default_attrs = ['num_classes', 'class_names']
     
     def __init__(self, **kwargs):
         
         # Global Label class ID tracking
-        self.global_id = Label._id_counter
-        # Image._gid_to_instance[self.global_id] = self  # save memory
+        self.gid = Label._id_counter
+        Label._gid_to_instance[self.gid] = self  # save memory
         Label._id_counter += 1
         
         super().__init__(**kwargs)  # update given attributes to dict

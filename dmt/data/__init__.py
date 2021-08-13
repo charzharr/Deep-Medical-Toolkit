@@ -5,9 +5,13 @@ __all__ = [
     'ScalarImage2D',
     'VectorImage2D',
     'Label',
+    'CategoricalLabel',
     'ScalarMask2D',
     'Scalarmask3D',
-    'CategoricalLabel',
+    'Sample',
+    'SampleSet',
+    'OneToOneLoader',
+    'OneToManyLoader',
 ]
 
 # Sample Components: images, labels, categories
@@ -28,3 +32,8 @@ from .label_masks import (
 # Samples & their collections
 from .samples.sample import Sample
 from .samples.sampleset import SampleSet
+
+# Data Loaders
+from .loading.oto_loader import OneToOneLoader
+from .loading.otm_loader import OneToManyLoader
+

@@ -24,7 +24,7 @@ archive/
 analysis/
 /datasets/
 wandb/
-wandb_login.sh
+wandb_login.shn
 
 # data files
 ISIC-2017_Validation_Data/
