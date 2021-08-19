@@ -7,8 +7,9 @@ import torch
 
 ### ---- ### ---- \\    Keys     // ---- ### ---- ###
 
-IMAGE = 'image'
-SHAPE = 'size'
+IMAGE = 'dmt_default_key_image'
+SHAPE = 'dmt_default_key_shape'
+LOCATION = 'dmt_default_key_location'  # location = lower_indices + upper_ind
 
 ### ---- ### ---- \\    Image Constants     // ---- ### ---- ###
 

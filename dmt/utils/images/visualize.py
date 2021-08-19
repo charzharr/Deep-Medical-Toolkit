@@ -114,6 +114,8 @@ def plot_grid(matrix_of_images, titles=None, image_size=10, save=''):
                 ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
     # plt.subplots_adjust(left=1, bottom=0, right=2, top=1, wspace=0, hspace=0)
     plt.show()
+    if save:
+        plt.savefig(save)
     
     
 def _get_plot_title(np_image):

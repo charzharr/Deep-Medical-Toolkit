@@ -62,7 +62,6 @@ class VectorImage2D(Image):
         
         if channel_first:
             array = np.moveaxis(array, -1, 0)
-        
         return array
     
     def plot(self, save=''):

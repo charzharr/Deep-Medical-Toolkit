@@ -2,6 +2,7 @@
 import logging
 import weakref
 
+import dmt
 from ..image_base import Image
 from ..label_base import Label
 
@@ -51,8 +52,8 @@ class Sample(dict):
         """ Returns a list of key names that are image objects. """
         image_keys = []
         for k, v in self.items():
-            if isinstance(v, Image):
-                if not include_labels and isinstance(v, Label):
+            if isinstance(v, dmt.data.Image):
+                if not include_labels and isinstance(v, dmt.data.Label):
                     continue
                 image_keys.append(k)
         return image_keys
@@ -66,7 +67,7 @@ class Sample(dict):
         """ Returns a list of key names that are labels. """
         label_keys = []
         for k, v in self.items():
-            if isinstance(v, Label):
+            if isinstance(v, dmt.data.Label):
                 if only_images and not isinstance(v, Image):
                     continue
                 label_keys.append(k)
@@ -152,6 +153,7 @@ class Sample(dict):
         return len(self.get_images_dict()) + len(self.get_labels_dict)
     
     def __copy__(self):
+        print('Sample copy called!')
         import copy
         result_dict = {}
         for key, value in self.items():
@@ -161,7 +163,7 @@ class Sample(dict):
                 value = copy.deepcopy(value)
             result_dict[key] = value
         new = Sample(result_dict)
-        new.applied_transforms = self.applied_transforms[:]
+        new.applied_transforms = self.applied_transforms[:]  # shallow copy
         return new
     
     ### Functions below offers compatible/correct dict functionality

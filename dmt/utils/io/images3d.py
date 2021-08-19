@@ -105,7 +105,7 @@ def hu_to_np_image(sitk_np_im, clip=[-1024, 325], scale=[0, 255],
 ### ---- ### ---- \\    Common sitk Operations     // ---- ### ---- ###
 
 
-def resample_sitk_isotropic(sitk_im, spacing=None, smooth=2,
+def resample_sitk_isotropic(sitk_im, spacing=None, smooth=0,
                              interpolation='nearest'):
     r"""
     Args:
@@ -130,6 +130,8 @@ def resample_sitk_isotropic(sitk_im, spacing=None, smooth=2,
                 for i in range(ndim)]
     if 'linear' in interpolation:
         interpolation = sitk.sitkLinear
+    elif 'spline' in interpolation or 'cubic' in interpolation:
+        interpolation = sitk.sitkBSpline
     else:
         interpolation = sitk.sitkNearestNeighbor
     

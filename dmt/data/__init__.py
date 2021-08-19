@@ -37,3 +37,5 @@ from .samples.sampleset import SampleSet
 from .loading.oto_loader import OneToOneLoader
 from .loading.otm_loader import OneToManyLoader
 
+from .loading.patches.uniform import UniformSampler3D
+

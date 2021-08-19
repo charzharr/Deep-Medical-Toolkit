@@ -89,7 +89,7 @@ class Image(dict):
         self.permanent_load = permanent_load  # updated in _process_input
         
         # Lazy-loaded image attributes to be updated in parse_input
-        self.image = None  # either None (if path given) or sitk image
+        self._sitk_image = None  # either None (if path given) or sitk image
         self.path = None  # this is None unless updated or given path
         self._shape = None  # lazy-loaded unless data is given as input
         self._spacing = None  # " "  Same for all attributes here & below
@@ -108,7 +108,7 @@ class Image(dict):
         """ OVERLOAD for custom loading. This is the default implementation.
         Loads an image from file into an sitk image.
             NOTE: this is only called to get sitk image if path is given.
-                If any other data was given, then self.image sitk will be used.
+            If any other data was given, then self.sikt_image will be used.
         Args:
             path: str or pathlib to image file
             sitk_type: sitk type to be casted as & to fill isVector argument
@@ -167,6 +167,12 @@ class Image(dict):
         tensor = tensor.to(out_type)
         return tensor
     
+    def save(self, file):
+        """ OVERLOAD if you want saving functionality. 
+        You could make use of self.array or self.sitk_image to get image data. 
+        """
+        sitk.WriteImage(self.sitk_image, file)
+        
     def plot(self):
         """ OVERLOAD if you want plotting functionality. 
         You could make use of self.array to get image data. 
@@ -182,8 +188,8 @@ class Image(dict):
         is given, then an sitk object is read and returned without interally
         saving.
         """
-        sitk_im = self.image
-        if self.image is None:
+        sitk_im = self._sitk_image
+        if self._sitk_image is None:
             sitk_im = self.read_image(self.path, self.container_type)
             if self._affine is None:  # take the chance to update
                 self._update_image_attributes(sitk_im=sitk_im) 
@@ -192,8 +198,8 @@ class Image(dict):
     @property
     def array(self):
         """ Gets numpy array from output type dervied from give storage type."""
-        sitk_im = self.image
-        if self.image is None:
+        sitk_im = self.sitk_image
+        if self.sitk_image is None:
             sitk_im = self.read_image(self.path, self.container_type)
             if self._affine is None:  # take the chance to update
                 self._update_image_attributes(sitk_im=sitk_im) 
@@ -206,8 +212,8 @@ class Image(dict):
     
     @property
     def tensor(self):
-        sitk_im = self.image
-        if self.image is None:
+        sitk_im = self.sitk_image
+        if self.sitk_image is None:
             sitk_im = self.read_image(self.path, self.container_type)
             if self._affine is None:  # take the chance to update
                 self._update_image_attributes(sitk_im=sitk_im) 
@@ -239,6 +245,19 @@ class Image(dict):
             self._update_image_attributes()
         return self._origin
     
+    @origin.setter
+    def origin(self, value):
+        old_origin = self.origin
+
+        msg = '"Image.origin" must be set to a flattened np.ndarray.'
+        assert isinstance(value, np.ndarray), msg
+        
+        msg = (f'Given "origin" shape {value.shape} does not match with the '
+               f'old "origin" shape {old_origin.shape}.')
+        assert old_origin.shape == value.shape, msg
+        
+        self._origin = value
+    
     @property
     def direction(self):
         if self._direction is None:
@@ -250,6 +269,19 @@ class Image(dict):
         if self._affine is None:
             self._update_image_attributes()
         return self._affine
+    
+    @affine.setter
+    def affine(self, value):
+        old_affine = self.affine
+        
+        msg = 'Image.affine must be set to a flattened np.ndarray.'
+        assert isinstance(value, np.ndarray), msg
+        
+        msg = (f'Given "affine" shape {value.shape} does not match with the '
+               f'old affine shape {old_affine.shape}.')
+        assert old_affine.shape == value.shape, msg
+        
+        self._affine = value
     
     @property
     def memory(self): 
@@ -333,9 +365,9 @@ class Image(dict):
             
             self.path = path_or_data
             if permanent_load:
-                self.image = self.read_image(path_or_data, container_type)
+                self._sitk_image = self.read_image(path_or_data, container_type)
         elif isinstance(path_or_data, sitk.SimpleITK.Image):
-            self.image = path_or_data  # type will be cast below
+            self._sitk_image = path_or_data  # type will be cast below
         elif isinstance(path_or_data, torch.Tensor):
             path_or_data = path_or_data.detach().cpu().numpy()  # handled later
         
@@ -345,18 +377,19 @@ class Image(dict):
         
         if isinstance(path_or_data, np.ndarray):
             isVector = self.is_vector
-            self.image = sitk.GetImageFromArray(path_or_data, isVector=isVector)
+            self._sitk_image = sitk.GetImageFromArray(path_or_data, 
+                                                      isVector=isVector)
         
         # Update image attributes if self.image is defined
-        if self.image is not None:
-            if self.image.GetPixelID() != container_type:
-                self.image = sitk.Cast(self.image, container_type)
+        if self._sitk_image is not None:
+            if self._sitk_image.GetPixelID() != container_type:
+                self._sitk_image = sitk.Cast(self._sitk_image, container_type)
             self.permanent_load = True
             self._update_image_attributes()
         
         # Sanity Checks
         if permanent_load:
-            assert isinstance(self.image, sitk.SimpleITK.Image), 'Img not there'
+            assert isinstance(self._sitk_image, sitk.SimpleITK.Image), msg'Img not there'
         if self.image is None:
             assert self.path, 'If image is None, then path must be set'
             assert os.path.isfile(self.path), 'File {self.path} does not exist.'

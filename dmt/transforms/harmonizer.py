@@ -4,6 +4,9 @@ standardizes them to a Sample. This way, images of different types can be
 processed, and returned as their original type.
 """
 
+
+import warnings
+import copy
 import torch
 import numpy as np
 import nibabel as nib
@@ -12,6 +15,7 @@ import SimpleITK as sitk
 from dmt.data.image_base import Image
 from dmt.data.images import VectorImage2D, ScalarImage2D, ScalarImage3D
 from dmt.data.samples.sample import Sample
+from dmt.utils.parse import parse_bool
 
 
 class ImageHarmonizer:
@@ -22,15 +26,27 @@ class ImageHarmonizer:
     
     input_types = ('tensor', 'array', 'sitk', 'image', 'sample')
     
-    def __init__(self, data, image_key='main_image'):
+    def __init__(
+            self, 
+            data, 
+            include_keys=None, 
+            image_key='main_image',
+            copy=True
+            ):
         """
         Args:
             data: Can be a tensor, array, sitk image, Image object, or Sample.
+            include_keys: list of keys to check size compatibility & copy
+                data over if input data is a dict or Sample.
             image_key: key-name to be used in sample.
                 Only used if input data is not a sample. 
+            copy: Flag to copy data components when getting a new sample.
+                If harmonizer.sample is called n times, n copies are returned.
         """
+        
         self.data = data
         self.image_key = image_key  # key to store Image in new sample
+        self.copy = parse_bool(copy, 'copy')
         
         self.is_dict = False
         self.is_tensor = False
@@ -38,8 +54,29 @@ class ImageHarmonizer:
         self.is_sitk = False
         self.is_image = False
         self.is_sample = False
+        
+        self._sample = self._get_sample()
+        self.include_keys = self._parse_include_keys(self._sample, include_keys)
+        
+    @property
+    def sample(self):
+        """ Gets the sample (the universal image data type). """
+        if not self.copy:
+            return self._sample
+        return copy.copy(self._sample)
     
-    def get_sample(self):
+    @property
+    def consistent_shape(self):
+        """ Returns the spatial size of the images. """
+        sizes = set()
+        for k in self.include_keys:
+            sizes.add(tuple(self._sample[k].shape))
+        assert sizes  # sanity
+        if len(sizes) > 1:
+            return None
+        return np.array(sizes.pop())
+    
+    def _get_sample(self):
         data = self.data
         if isinstance(data, dict) and not isinstance(data, Sample):
             sample_d = {k: self._parse_data(v) for k, v in data.items()}
@@ -68,8 +105,10 @@ class ImageHarmonizer:
                    'Samples, or dictionaries of the previous are valid. '
                    f'You gave {type(data)}') 
             raise ValueError(msg)
+        
+        assert sample.num_images > 0, 'You did not give a single image.'
         assert sum([self.is_dict, self.is_tensor, self.is_array, self.is_sitk,
-                    self.is_image, self.is_sample]) == 1
+                    self.is_image, self.is_sample]) == 1  # sanity
         return sample
     
     def get_output(self, transformed_sample):
@@ -111,9 +150,30 @@ class ImageHarmonizer:
             return ScalarImage3D(data)
         elif isinstance(self.data, Image):
             return Image
-        raise ValueError(f'Input type not recognized: {type(data)}')
+        else:
+            return data  # dict or Sample entry is not an Image
     
-    
+    def _parse_include_keys(self, sample, include_keys):
+        if self.is_dict or self.is_sample:
+            image_keys = sample.get_image_keys(include_labels=True)
+            if not include_keys:
+                return image_keys
+            final_include_keys = []
+            for k in include_keys:
+                if k not in image_keys:
+                    msg = (f'Given key ({k}) in "include_keys" is either not '
+                           f'in the input data or is not an Image')
+                    warnings.warn(msg)
+                    continue
+                final_include_keys.append(k)
+            msg = ('The keys in "include_keys" you gave are all useless. '
+                   'Either none of them were in data or none were images.')
+            assert final_include_keys, msg
+            return final_include_keys
+        else:
+            return [self.image_key]
+
+
 def infer_image_type(image):
     """ Through some basic assumptions, try to guess whether an image is 
     (1) 2d or 3d, (2) vector or scalar, or (3) channel first / last
