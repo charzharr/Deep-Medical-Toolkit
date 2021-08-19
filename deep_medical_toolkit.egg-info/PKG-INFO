@@ -69,7 +69,6 @@ Description:
         
 Keywords: dmt
 Platform: UNKNOWN
-Classifier: License :: Apache License
 Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.9

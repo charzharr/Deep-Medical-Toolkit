@@ -35,7 +35,6 @@ setup(
     author_email="yzhang46@nd.edu",
     license="Apache License 2.0",
     classifiers=[
-        "License :: Apache License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.9",
